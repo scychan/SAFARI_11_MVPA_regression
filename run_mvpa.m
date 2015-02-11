@@ -19,8 +19,7 @@ function [] = run_mvpa(args,results_name)
 
 %% set paths
 
-data_dir = fullfile('/Users/yenne/mnt/scratch/scychan/SAFARI/11_MVPA_regression/data',args.subjID); % XX
-% data_dir = fullfile('/home/scychan/mnt/scratch/scychan/SAFARI/11_MVPA_regression/data',args.subjID); % XX
+data_dir = fullfile('../data',args.subjID);
 
 %% initialize the 'subj' structure
 
