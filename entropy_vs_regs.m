@@ -44,6 +44,3 @@ for ict = 1:length(corrtypes)
         end
     end
 end
-
-%% compute Spearman correlation
-
