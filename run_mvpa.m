@@ -248,7 +248,8 @@ end
 full_results_name = sprintf('%s_%s',datestr(now,'mmddyy_HHSS'),results_name);
 
 % results_dir
-results_dir = fullfile('../results/mvpa_results/',args.subjID,full_results_name)
+results_dir = sprintf('../results/mvpa_results/featsel%i/penalty%g/%s/%s',...
+    args.featsel_thresh, args.penalty, args.subjID, full_results_name);
 mkdir_ifnotexist(results_dir)
 
 % % clear the mask and the functional patterns, which are large
