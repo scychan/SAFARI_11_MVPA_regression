@@ -17,9 +17,9 @@ SFR='/jukebox/norman/stephanie/safari'
 # Prompt for instructions
 read -p 'Copy all data? (y/n) ' copyall
 if [ ! $copyall = 'y' ]; then
-    read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
     read -p 'Copy run lengths? (y/n) ' copyrunlens
     read -p 'Copy EPIs? (y/n) ' copyEPIs
+    read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
     read -p 'Copy regressors/selectors? (y/n) ' copyregs
 fi
 
@@ -30,12 +30,7 @@ for subj in $subjnums; do
     # make data directory
     subjdir=../data/SFR$subj
     mkdir_ifnotexist $subjdir
-
-    # load wholebrain masks
-    if [ $copyall = 'y' ] || [ $copybrainmasks = 'y' ]; then
-	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/mask_wholebrain.nii.gz
-    fi
-    
+  
     # load run_lengths
     if [ $copyall = 'y' ] || [ $copyrunlens = 'y' ]; then
 	copy $SFR/6_fMRI_data/SFR$subj/run_lengths.txt $subjdir/
@@ -44,10 +39,15 @@ for subj in $subjnums; do
     # load EPI data (take runs only, and gunzip)
     if [ $copyall = 'y' ] || [ $copyEPIs = 'y' ]; then
 	copy $SFR/6_fMRI_data/SFR$subj/nifti/big4D_mc_fmu.nii.gz $subjdir/
-	sumTRs=0; for i in `cat run_lengths.txt`; do echo $i; sumTRs=$((sumTRs+$i)); done
+	sumTRs=0; for i in `cat $subjdir/run_lengths.txt`; do sumTRs=$((sumTRs+$i)); done
 	fslroi $subjdir/big4D_mc_fmu $subjdir/big4D_mc_fmu_runs 0 $sumTRs
-	gunzip $subjdir/big4D_mc_fmu_runs
-	rm $subjdir/big4D_mc_fmu
+	gunzip $subjdir/big4D_mc_fmu_runs.nii.gz
+	rm $subjdir/big4D_mc_fmu.nii.gz
+    fi
+
+     # load wholebrain masks
+    if [ $copyall = 'y' ] || [ $copybrainmasks = 'y' ]; then
+	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/mask_wholebrain.nii.gz
     fi
 
     # load regressors/selectors
