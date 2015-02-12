@@ -18,7 +18,7 @@ for ifs = 1:nfs
     fs = featselvals(ifs);
     penaltyvals_str = dir_filenames(sprintf('%s/featsel%i',resultsdir,fs),1);
     penaltyvals{ifs} = nan(size(penaltyvals_str));
-    for ip = 1:length(penaltyvals)
+    for ip = 1:length(penaltyvals{ifs})
         penaltyvals{ifs}(ip) = str2double(penaltyvals_str{ip}(8:end));
     end
 end
