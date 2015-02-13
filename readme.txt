@@ -6,6 +6,7 @@
 Analyze data
 * perf_across_subjs.m
 * perf_across_settings.m
+* importance_maps.m
     
 Other analyses
 * entropy_vs_regs.m  -- is entropy correlated with the indiv latent cause regressors?
