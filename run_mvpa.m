@@ -252,13 +252,16 @@ results_dir = sprintf('../results/mvpa_results/featsel%i/penalty%g/%s/%s',...
     args.featsel_thresh, args.penalty, args.subjID, full_results_name);
 mkdir_ifnotexist(results_dir)
 
-% % clear the mask and the functional patterns, which are large
-% subj = remove_mat(subj,'pattern',epiname);
-% subj = remove_mat(subj,'mask',maskname);
+% remove the functional pattern, which is large
+subj = remove_mat(subj,'pattern',epiname);
 
+% save args, subj, results
 save(fullfile(results_dir,'args'),'args')
-% save(fullfile(results_dir,'subj'),'subj')
+save(fullfile(results_dir,'subj'),'subj')
 save(fullfile(results_dir,'results'),'results')
 
-% saveas(fig1,fullfile(results_dir,'confusion_matrix.eps'))
-% saveas(fig2,fullfile(results_dir,'timeplot.eps'))
+% save figures
+if makefigs
+    saveas(fig1,fullfile(results_dir,'confusion_matrix.eps'))
+    saveas(fig2,fullfile(results_dir,'timeplot.eps'))
+end
