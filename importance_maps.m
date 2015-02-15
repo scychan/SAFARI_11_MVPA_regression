@@ -5,7 +5,6 @@ function importance_maps(featsel_thresh,penalty,subjnum)
 make_plots = 0;
 niter = 4;
 nsector = 4;
-maskname = 'wholebrain';
 
 % directories
 data_dir = sprintf('../data/SFR%i',subjnum);
@@ -22,69 +21,70 @@ end
 %% load MVPA results
 
 tmpload = load(fullfile(subjdir,'results'));
-iterations = cell(1,nsector);
-for sector = 1:nsector
-    iterations{sector} = tmpload.results{sector}.iterations;
+iterations = cell(niter,nsector);
+for iter = 1:niter
+    for sector = 1:nsector
+        iterations{iter,sector} = tmpload.results{iter,sector}.iterations;
+    end
 end
 
 % get the weights for all the iterations
-nvox = length(iterations{1}(1).scratchpad.ridge.betas);
-weights = nan(nvox,nsector,niter);
-for sector = 1:nsector
-    for iter = 1:niter
-        weights(:,sector,iter) = iterations{sector}(iter).scratchpad.ridge.betas;
+weights = cell(1,niter);
+for iter = 1:niter
+    nvox = length(iterations{iter,1}.scratchpad.ridge.betas);
+    weights{iter} = nan(nsector,nvox);
+    for sector = 1:nsector
+        weights{iter}(sector,:) = iterations{iter,sector}.scratchpad.ridge.betas;
     end
 end
 
 % average over the iterations
-weights = mean(weights,3);
+% weights = mean(weights,3); XX
 
 %% histogram of weights
 
 if make_plots
     figure
-    for isector = 1:nsector
-        subplot(nsector,1,isector)
-        
-        w = weights(:,isector);
-        
-        hist(w(w>0.01),20)
-        %     set(gca,'xlim',clims)
-        %     set(gca,'ylim',[0 30])
+    for iter = 1:niter
+        for isector = 1:nsector
+            subplot_ij(niter,nsector,iter,isector)
+            w = weights{iter}(isector,:);
+            hist(w(w~=0),10)
+            %     set(gca,'xlim',clims)
+            %     set(gca,'ylim',[0 30])
+        end
     end
+    equalize_subplot_axes('xy',gcf,niter,nsector,'r')
 end
-
-%% load mask
-
-mask_file = fullfile(data_dir,['mask_' maskname '.nii']);
-mask = load_nifti(mask_file);
 
 %% make plots (one for each category)
 % average across iterations XX
 
-nslices = size(mask,3);
-nrows = floor(sqrt(nslices));
-ncols = ceil(nslices/nrows);
+% nslices = size(mask,3);
+% nrows = floor(sqrt(nslices));
+% ncols = ceil(nslices/nrows); XX
 
-for icat = 1:3
-    
-    catname = categories{icat};
-    
-    % un-mask the weights
-    weights3D.(catname) = zeros(size(mask));
-    weights3D.(catname)(mask==1) = weights(:,icat);
-    
-    if make_plots
-        figure
-        colormap('cool')
+for iter = 1:niter
+    for isector = 1:nsector
         
-        for islice = 1:nslices
-            
-            subplot(nrows,ncols,islice)
-            
-            clims = [-0.015 0.015];
-            % clims = [min(weights(:,icat)) max(weights(:,icat))];
-            imagesc(weights3D.(catname)(:,:,islice),clims)
+        % get the mask
+        maskname = sprintf('featselmask_iter%i_sector%i_1',iter,isector);
+        mask = get_mat(subj,'mask',maskname);
+        nslices = size(mask,3);
+        
+        % un-mask the weights
+        weights3D{iter,isector} = zeros(size(mask));
+        weights3D{iter,isector}(mask==1) = weights{iter}(isector,:);
+        
+        if make_plots
+            figure; figuresize('fullscreen')
+            colormap('cool')
+            for islice = 1:nslices
+                subplot_square(nslices,islice)
+                clims = [-0.015 0.015];
+                % clims = [min(weights(:,icat)) max(weights(:,icat))];
+                imagesc(weights3D{iter,isector}(:,:,islice),clims)
+            end
         end
     end
 end
@@ -96,96 +96,84 @@ end
 % (-) weight * (-) activity while regressor is on => (-) importance
 % Different signs => 0 importance
 
-load(sprintf('../../../../mvpa_results/CLO%i/%s/args.mat',subjnum,datatype))
-
-subj = set_up_subj(args);
-
-patname = results.iterations(1).created.patname;
-maskname = results.iterations(1).created.maskname;
-regsname = results.iterations(1).created.regsname;
-
-maskinfo = get_object(subj,'mask',maskname);
-nvox = maskinfo.nvox;
-importance_map_alliter = zeros(nvox,3,niter);
-
+importance_maps = cell(1,niter);
 for iter = 1:niter
-    
-    selname = results.iterations(iter).created.selname;
-    
-    masked_pat  = get_masked_pattern(subj,patname,maskname);
-    selectors   = get_mat(subj,'selector',selname);
-    regressors  = get_mat(subj,'regressors',regsname);
-    
-    for icat = 1:3
-        pats_to_avg  = masked_pat(:,regressors(icat,:)==1);
-        avg_activity = mean(pats_to_avg,2);
+    for isector = 1:nsector
+        
+        patname = results{iter,isector}.iterations.created.patname;
+        maskname = results{iter,isector}.iterations.created.maskname;
+        selname = results{iter,isector}.iterations.created.selname;
+        
+        maskname = sprintf('featselmask_iter%i_sector%i_1',iter,isector);
+        maskinfo = get_object(subj,'mask',maskname);
+        nvox = maskinfo.nvox;
+        importance_maps{iter,isector} = zeros(1,nvox);
+        
+        masked_pat  = get_masked_pattern(subj,patname,maskname);
+        selectors   = get_mat(subj,'selector',selname);
+        pats_to_avg  = masked_pat(:,selectors==1);
+        avg_activity = horz(mean(pats_to_avg,2));
         
         % positive quadrant
-        posvoxels = weights(:,icat) > 0 & avg_activity > 0;
-        importance_map_alliter(posvoxels,icat,iter) = weights(posvoxels,icat) .* avg_activity(posvoxels);
+        posvoxels = weights{iter}(isector,:) > 0 & avg_activity > 0;
+        importance_maps{iter,isector}(posvoxels) = weights{iter}(isector,posvoxels) .* avg_activity(posvoxels);
         
         % negative quadrant
-        negvoxels = weights(:,icat) < 0 & avg_activity < 0;
-        importance_map_alliter(negvoxels,icat,iter) = - weights(negvoxels,icat) .* avg_activity(negvoxels);
+        negvoxels = weights{iter}(isector,:) < 0 & avg_activity < 0;
+        importance_maps{iter,isector}(negvoxels) = - weights{iter}(isector,negvoxels) .* avg_activity(negvoxels);
     end
-    
 end
-
-importance_map = squeeze(mean(importance_map_alliter,3));
 
 %% Histogram of the importance values
 
 if make_plots
     figure
-    for icat = 1:3
-        subplot(3,1,icat)
-        
-        w = importance_map(:,icat);
-        
-        hist(w,20)
-        %     hist(w(w>0.01),20)
-        %     set(gca,'xlim',clims)
-        %     set(gca,'ylim',[0 30])
+    for iter = 1:niter
+        for isector = 1:nsector
+            subplot_ij(niter,nsector,iter,isector)
+            w = importance_maps{iter,isector};
+            hist(w(w~=0),10)
+            %     set(gca,'xlim',clims)
+            %     set(gca,'ylim',[0 30])
+        end
     end
+    equalize_subplot_axes('xy',gcf,niter,nsector,'r')
 end
 
-%% Plot importance map (one for each category)
-% averaged across iterations
+%% Plot importance map (one for each iter and each sector)
+% averaged across iterations XX
 
-nslices = size(mask,3)
-nrows = floor(sqrt(nslices));
-ncols = ceil(nslices/nrows);
-
-for icat = 1:3
-    
-    catname = categories{icat};
-    
-    % un-mask the importance map
-    importance3D.(catname) = zeros(size(mask));
-    importance3D.(catname)(mask==1) = importance_map(:,icat);
-    
-    if make_plots
-        figure
-        colormap('cool')
+for iter = 1:niter
+    for isector = 1:nsector
         
-        for islice = 1:nslices
-            
-            subplot(nrows,ncols,islice)
-            
-            % clims = [-0.015 0.025];
-            clims = [min(weights(:,icat)) max(weights(:,icat))];
-            imagesc(importance3D.(catname)(:,:,islice),clims)
-            %         imagesc(importance3D(:,:,islice))
+        % get mask
+        maskname = sprintf('featselmask_iter%i_sector%i_1',iter,isector);
+        mask = get_mat(subj,'mask',maskname);
+        nslices = size(mask,3);
+        
+        % un-mask the importance map
+        importance3D{iter,isector} = zeros(size(mask));
+        importance3D{iter,isector}(mask==1) = importance_maps{iter,isector};
+        
+        if make_plots
+            figure; figuresize('fullscreen')
+            colormap('cool')
+            for islice = 1:nslices
+                subplot_square(nslices,islice)
+                % clims = [-0.015 0.015];
+                clims = [min(importance_maps{iter,isector}), max(importance_maps{iter,isector})];
+                imagesc(importance3D{iter,isector}(:,:,islice),clims)
+            end
         end
     end
 end
 
-%% compile everything
-maps.(datatype).mask = mask;
-maps.(datatype).weights = weights3D;
-maps.(datatype).importances = importance3D;
+%% compile everything XX
+% maps.(datatype).mask = mask;
+% maps.(datatype).weights = weights3D;
+% maps.(datatype).importances = importance3D;
 
-%%
-outdir = '../../../results/analyze_results/importance_maps/unnormalized';
-mkdir_ifnotexist(outdir);
-save(sprintf('%s/CLO%i',outdir,subjnum),'maps')
+%% save maps XX
+% outdir = '../../../results/analyze_results/importance_maps/unnormalized';
+% mkdir_ifnotexist(outdir);
+% save(sprintf('%s/CLO%i',outdir,subjnum),'maps')
