@@ -1,4 +1,4 @@
-function perf_across_subjs(featsel_thresh,penalty,varargin)
+function perf_across_subjs(varargin)
 
 pairs = {'subjnums'   setdiff(101:132,[111 128])...
     }; parseargs(varargin,pairs)
@@ -10,13 +10,13 @@ nsector = 4;
 
 %% load the data
 
-resultsdir = sprintf('../results/mvpa_results/featsel%i/penalty%g',featsel_thresh,penalty);
+resultsdir = '../results/mvpa_results/';
 results = cell(1,nsubj);
 for isubj = 1:nsubj
     subj = subjnums(isubj);
     subjdir = dir_filenames(sprintf('%s/SFR%i/*_results',resultsdir,subj),1,1);
-    tmpload = load(fullfile(subjdir,'results'));
-    results{isubj} = tmpload.results;
+    tmpload = load(fullfile(subjdir,'results_outer'));
+    results{isubj} = tmpload.results_outer;
 end
 
 %% compile avg performance for each subject and each sector

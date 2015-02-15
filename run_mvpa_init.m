@@ -1,4 +1,4 @@
-function [] = run_mvpa(args,results_name)
+function [] = run_mvpa_init(args,results_name)
 % INPUTS:
 % args.subjID
 % args.runs         - which runs file to use? 
@@ -21,6 +21,10 @@ function [] = run_mvpa(args,results_name)
 
 % path to data
 data_dir = fullfile('../data',args.subjID);
+
+% path to tempdata dir
+tempdata_dir = fullfile('../tempdata',args.subjID);
+mkdir_ifnotexist(tempdata_dir);
 
 % nsectors
 nsectors = 4;
@@ -167,111 +171,16 @@ if ismember('corr',args.featsel_types)
     end
 end
 
-%% model-selection (find best parameters) on inner xvalidation loops
+%% save necessary info for next steps 
 
-% for each inner loop
-results_inner = nan(length(unique(runs)),...
+% save the workspace
+save(fullfile(tempdata_dir,'init_workspace'))
+
+% save n_inner_loops
+n_inner_loops = prod([length(unique(runs)),...
     length(args.penalty_multipliers),...
     length(args.featsel_types),...
-    length(args.featsel_threshes));
-best_setting = nan(1,max(unique(runs)));
-for r_outer = unique(runs)
-    setting.xvalname = sprintf('%s_%i',innerxvalname,r_outer);
-    
-    % iterate parameter settings and run xvalidation on each setting
-    for i_pm = 1:length(args.penalty_multipliers) % penalty multiplier
-        setting.penalty_multiplier = args.penalty_multipliers(i_pm);
-        
-        for i_ftype = 1:length(args.featsel_types) % feature selection type
-            setting.featsel_type = args.featsel_types{i_ftype};
-            
-            if strcmp(setting.featsel_type,'none')
-                error('no need to iterate over thresholds -- write this code')
-            else
-                for i_fthresh = 1:length(args.featsel_threshes) % feature selection threshold
-                    setting.featsel_thresh = args.featsel_threshes(i_fthresh); 
-                    
-                    % run xvalidation on the settings
-                    disp(setting)
-                    run_xvalidation;
-                    
-                    % save the mean performance for this setting
-                    tempresults = nan(1,nsectors);
-                    for isector = 1:nsectors
-                        tempresults(isector) = results{isector}.total_perf;
-                    end
-                    results_inner(r_outer,i_pm,i_ftype,i_fthresh) = mean(tempresults);
-                    
-                    % clean up subj and other variables
-                    for isector = 1:nsectors
-                        subj = remove_group(subj,'pattern',sprintf('stat_sector%i',isector));
-                        subj = remove_group(subj,'mask',sprintf('featselmask_sector%i',isector));
-                    end
-                    clear featselname featselnames nvox results
-                end
-            end
-        end
-    end
-    
-    % find the best setting
-    [~, best_setting(r_outer)] = max(vert(results_inner(r_outer,:,:,:)));
-end
-
-%% do cross-validation on the outer loop, using the best settings from the inner loop
-
-% get the best setting for each r_outer
-clear setting
-for r_outer = unique(runs)
-    [i_pm, i_ftype, i_fthresh] = ind2sub([length(args.penalty_multipliers),...
-        length(args.featsel_types),...
-        length(args.featsel_threshes)],...
-        best_setting(r_outer));
-    
-    setting(r_outer).penalty_multiplier = args.penalty_multipliers(i_pm);
-    setting(r_outer).featsel_type = args.featsel_types{i_ftype};
-    setting(r_outer).featsel_thresh = args.featsel_threshes(i_fthresh);
-    
-    setting(r_outer).xvalname = sprintf('%s_%i',outerxvalname,r_outer);
-end
-
-% run xvalidation
-run_xvalidation
-
-% save the results
-results_outer = results;
-clear results
-
-%% make plots for results
-
-makefigs = 0;
-if makefigs
-    fig1 = mvpa_confusion_matrix(results,condnames);
-    fig2 = mvpa_plot_v_time(results,condnames);
-    
-    saveas(fig1,fullfile(results_dir,'confusion_matrix.fig'))
-    saveas(fig2,fullfile(results_dir,'timeplot.fig'))
-end
-
-%% save results
-
-% results_name
-full_results_name = sprintf('%s_%s',datestr(now,'mmddyy_HHSS'),results_name);
-
-% results_dir
-results_dir = sprintf('../results/mvpa_results/%s/%s',args.subjID, full_results_name);
-mkdir_ifnotexist(results_dir)
-
-% remove the functional pattern, which is large
-subj = remove_mat(subj,'pattern',epiname);
-
-% save args, subj, results_inner, results_outer
-save(fullfile(results_dir,'args'),'args')
-save(fullfile(results_dir,'subj'),'subj')
-save(fullfile(results_dir,'results_inner'),'results_inner')
-save(fullfile(results_dir,'results_outer'),'results_outer')
-
-% save figures
-if makefigs
-    saveas(fig1,fullfile(results_dir,'confusion_matrix.eps'))
-    saveas(fig2,fullfile(results_dir,'timeplot.eps'))
-end
+    length(args.featsel_threshes)]);
+fid = fopen(fullfile(tempdata_dir,'n_inner_loops.txt'),'w');
+fprintf(fid,'%i',n_inner_loops)
+fclose('all');
