@@ -17,9 +17,13 @@ function [] = run_mvpa(args,results_name)
 % results_name      - name of directory storing MVPA results
 
 
-%% set paths
+%% basics
 
+% path to data
 data_dir = fullfile('../data',args.subjID);
+
+% nsectors
+nsectors = 4;
 
 %% initialize the 'subj' structure
 
@@ -49,12 +53,11 @@ if isempty(args.runs)
 else
     runsname = ['runs_' args.runs];
 end 
-load(fullfile(data_dir,runsname))
+load(fullfile(data_dir,runsname)) % load 'runs'
 
 selsname = 'runs';
 subj = init_object(subj,'selector',selsname);
 subj = set_mat(subj,'selector',selsname,runs); 
-clear runs
 
 % % for blocking out unwanted TRs, e.g. CT for FRonly
 % blocker_selsname = 'blocker';
@@ -128,105 +131,115 @@ if args.zscore == 1
     epiname = [epiname '_z'];
 end
 
-%% make cross-validation indices
+%% make cross-validation indices for inner loops
+%     => xvalnames{isector} = selector group selsname_xvalcond$isector
+% OR  => xvalname = selector selsname_nested_xval
+
+subj = create_nested_xvalid_indices(subj,selsname,...
+    'actives_selname',actives_selname);
+innerxvalname = [selsname '_nested_xval'];
+
+%% make cross-validation indices for outer loop
 %     => xvalnames{isector} = selector group selsname_xvalcond$isector
 % OR  => xvalname = selector selsname_xval
 
 subj = create_xvalid_indices(subj,selsname,...
     'actives_selname',actives_selname);
 %     'actives_selname',{actives_selname,blocker_selsname});
-xvalname = [selsname '_xval'];
+outerxvalname = [selsname '_xval'];
+
+% ungroup 
+% (so that can be entered separately to feature_select and cross_validation)
+for iter = unique(runs)
+    subj = set_objfield(subj,...
+        'selector',sprintf('%s_%i',outerxvalname,iter),...
+        'group_name',sprintf('%s_%i',outerxvalname,iter),...
+        'ignore_absence',true);
+end
 
 %% separate regressors
 % necessary for some things
 
-if strcmp(args.featsel_type,'corr')
+if ismember('corr',args.featsel_types)
     subj = separate_regressors(subj,regsname);
-    for isector = 1:4
+    for isector = 1:nsectors
         regsnames_separated{isector} = sprintf('%s_%i',regsname,isector);
     end
 end
 
-%% feature selection
-% use the same selectors that will be used in cross-validation
-% => featselname OR featselnames{isector}
+%% model-selection (find best parameters) on inner xvalidation loops
 
-switch args.featsel_type
-    case 'none'
-        %== No feature selection ==%
-        featselname = maskname;
-        
-    case 'corr'
-        %== Correlation-based feature selection ==%
-        for isector = 1:4
-            subj = feature_select(subj,epiname, ...
-                regsnames_separated{isector}, xvalname, ...
-                'statmap_funct','statmap_xcorr', ...
-                'statmap_arg', [], ...
-                'new_map_patname', sprintf('stat_sector%i',isector), ...
-                'thresh', []);
-            featselnames{isector} = sprintf('featselmask_sector%i',isector);
-            subj = create_sorted_mask(subj, sprintf('stat_sector%i',isector), featselnames{isector}, args.featsel_thresh,'descending',1);
-        end
-        
-    case 'anova'
-        %== ANOVA-based feature selection ==%
-        subj = feature_select(subj,epiname,regsname,xvalname,...
-            'thresh',args.featsel_thresh);
-        featselname = [epiname '_thresh' num2str(args.anovathresh)];
-end
-
-%% classification
-
-switch(args.classifier)
+% for each inner loop
+results_inner = nan(length(unique(runs)),...
+    length(args.penalty_multipliers),...
+    length(args.featsel_types),...
+    length(args.featsel_threshes));
+best_setting = nan(1,max(unique(runs)));
+for r_outer = unique(runs)
+    setting.xvalname = sprintf('%s_%i',innerxvalname,r_outer);
     
-    case 'gnb'
-        class_args.train_funct_name = 'train_gnb';
-        class_args.test_funct_name = 'test_gnb';
+    % iterate parameter settings and run xvalidation on each setting
+    for i_pm = 1:length(args.penalty_multipliers) % penalty multiplier
+        setting.penalty_multiplier = args.penalty_multipliers(i_pm);
         
-    case 'bp'
-        class_args.train_funct_name = 'train_bp';
-        class_args.test_funct_name = 'test_bp';
-        class_args.nHidden = 0;
-        
-    case 'L2logreg'
-        class_args.train_funct_name = 'train_L2_RLR';
-        class_args.test_funct_name = 'test_L2_RLR';
-        class_args.penalty = args.penalty;
-        class_args.lambda = 'crossvalidation'; % XX-- peeking??
-        
-    case 'logreg'
-        class_args.train_funct_name = 'train_logreg';
-        class_args.test_funct_name = 'test_logreg';
-        class_args.penalty = args.penalty;
-        
-    case 'ridge'
-        class_args.train_funct_name = 'train_ridge';
-        class_args.test_funct_name = 'test_ridge';
-        class_args.penalty = args.penalty;
-        
-    otherwise
-        disp('(-) unknown classifier type!');
-        return
-        
+        for i_ftype = 1:length(args.featsel_types) % feature selection type
+            setting.featsel_type = args.featsel_types{i_ftype};
+            
+            if strcmp(setting.featsel_type,'none')
+                error('no need to iterate over thresholds -- write this code')
+            else
+                for i_fthresh = 1:length(args.featsel_threshes) % feature selection threshold
+                    setting.featsel_thresh = args.featsel_threshes(i_fthresh); 
+                    
+                    % run xvalidation on the settings
+                    disp(setting)
+                    run_xvalidation;
+                    
+                    % save the mean performance for this setting
+                    tempresults = nan(1,nsectors);
+                    for isector = 1:nsectors
+                        tempresults(isector) = results{isector}.total_perf;
+                    end
+                    results_inner(r_outer,i_pm,i_ftype,i_fthresh) = mean(tempresults);
+                    
+                    % clean up subj and other variables
+                    for isector = 1:nsectors
+                        subj = remove_group(subj,'pattern',sprintf('stat_sector%i',isector));
+                        subj = remove_group(subj,'mask',sprintf('featselmask_sector%i',isector));
+                    end
+                    clear featselname featselnames nvox results
+                end
+            end
+        end
+    end
+    
+    % find the best setting
+    [~, best_setting(r_outer)] = max(vert(results_inner(r_outer,:,:,:)));
 end
 
-if strcmp(args.classifier,'ridge')
-    if strcmp(args.featsel_type,'corr')
-        for isector = 1:4
-            [subj results{isector}] = cross_validation(subj,epiname,regsnames_separated{isector},...
-                xvalname,featselnames{isector},class_args,...
-                'perfmet_functs','perfmet_xcorr');
-        end
-    else
-        [subj results] = cross_validation(subj,epiname,regsname,...
-            xvalname,featselname,class_args,...
-            'perfmet_functs','perfmet_xcorr');
-    end
-else
-    [subj results] = cross_validation(subj,epiname,regsname,...
-                     xvalname,featselname,class_args);
+%% do cross-validation on the outer loop, using the best settings from the inner loop
+
+% get the best setting for each r_outer
+clear setting
+for r_outer = unique(runs)
+    [i_pm, i_ftype, i_fthresh] = ind2sub([length(args.penalty_multipliers),...
+        length(args.featsel_types),...
+        length(args.featsel_threshes)],...
+        best_setting(r_outer));
+    
+    setting(r_outer).penalty_multiplier = args.penalty_multipliers(i_pm);
+    setting(r_outer).featsel_type = args.featsel_types{i_ftype};
+    setting(r_outer).featsel_thresh = args.featsel_threshes(i_fthresh);
+    
+    setting(r_outer).xvalname = sprintf('%s_%i',outerxvalname,r_outer);
 end
+
+% run xvalidation
+run_xvalidation
+
+% save the results
+results_outer = results;
+clear results
 
 %% make plots for results
 
@@ -242,23 +255,20 @@ end
 %% save results
 
 % results_name
-if ~exist('results_name','var')
-    results_name = 'results';
-end
 full_results_name = sprintf('%s_%s',datestr(now,'mmddyy_HHSS'),results_name);
 
 % results_dir
-results_dir = sprintf('../results/mvpa_results/featsel%i/penalty%g/%s/%s',...
-    args.featsel_thresh, args.penalty, args.subjID, full_results_name);
+results_dir = sprintf('../results/mvpa_results/%s/%s',args.subjID, full_results_name);
 mkdir_ifnotexist(results_dir)
 
 % remove the functional pattern, which is large
 subj = remove_mat(subj,'pattern',epiname);
 
-% save args, subj, results
+% save args, subj, results_inner, results_outer
 save(fullfile(results_dir,'args'),'args')
 save(fullfile(results_dir,'subj'),'subj')
-save(fullfile(results_dir,'results'),'results')
+save(fullfile(results_dir,'results_inner'),'results_inner')
+save(fullfile(results_dir,'results_outer'),'results_outer')
 
 % save figures
 if makefigs
