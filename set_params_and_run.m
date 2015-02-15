@@ -39,4 +39,4 @@ disp(args)
 if ~exist('results_name','var')
     results_name = 'results';
 end
-run_mvpa(args,results_name)
+run_mvpa_init(args,results_name)
