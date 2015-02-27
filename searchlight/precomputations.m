@@ -1,12 +1,12 @@
 function precomputations(subjnum,ngroups_max,varargin)
 
-% subjnum = 109, ngroups_max = 5000, searchlight_radius = 2
+% subjnum = 101, ngroups_max = 5000, varargin={}
 
 %% parse inputs
 
 % optional arguments
-pairs = {'searchlight_radius'    2    % radius of sphere (smallest = radius 1 = one voxel)
-         'penalty'               0};  % regularization penalty for logistic regression
+pairs = {'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
+         'penalty'               1};  % regularization penalty for logistic regression
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
@@ -27,14 +27,13 @@ fprintf('penalty: %g\n',penalty)
 
 %% filepaths
 
-datadir = sprintf('../data/CLO%i',subjnum);
-addpath('helpers')
+datadir = sprintf('../../data/SFR%i',subjnum);
 
-%% load temporal-occipital mask
+%% load wholebrain mask
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(fullfile(datadir,'mask_temporal_occipital.nii.gz'));
+brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii'));
 brainmask = logical(brainmask);
 
 %% sample every other voxel from the mask
@@ -77,7 +76,7 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-outdir = sprintf('../results/radius%i/penalty%g/CLO%i/precomputations',...
+outdir = sprintf('../../results/radius%i/penalty%g/SFR%i/precomputations',...
     searchlight_radius,penalty,subjnum);
 mkdir_ifnotexist(outdir)
 
