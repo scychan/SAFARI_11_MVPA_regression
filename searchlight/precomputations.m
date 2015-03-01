@@ -33,7 +33,7 @@ datadir = sprintf('../../data/SFR%i',subjnum);
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii'));
+brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii.gz'));
 brainmask = logical(brainmask);
 
 %% sample every other voxel from the mask
@@ -76,7 +76,7 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-outdir = sprintf('../../results/radius%i/penalty%g/SFR%i/precomputations',...
+outdir = sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i/precomputations',...
     searchlight_radius,penalty,subjnum);
 mkdir_ifnotexist(outdir)
 
