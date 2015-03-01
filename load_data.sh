@@ -36,11 +36,12 @@ for subj in $subjnums; do
 	copy $SFR/6_fMRI_data/SFR$subj/run_lengths.txt $subjdir/
     fi
 
-    # load EPI data (take runs only)
+    # load EPI data (take runs only, and gunzip)
     if [ $copyall = 'y' ] || [ $copyEPIs = 'y' ]; then
 	copy $SFR/6_fMRI_data/SFR$subj/nifti/big4D_mc_fmu.nii.gz $subjdir/
 	sumTRs=0; for i in `cat $subjdir/run_lengths.txt`; do sumTRs=$((sumTRs+$i)); done
 	fslroi $subjdir/big4D_mc_fmu $subjdir/big4D_mc_fmu_runs 0 $sumTRs
+	gunzip $subjdir/big4D_mc_fmu_runs.nii.gz
 	rm $subjdir/big4D_mc_fmu.nii.gz
     fi
 
