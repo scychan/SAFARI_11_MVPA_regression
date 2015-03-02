@@ -33,7 +33,7 @@ datadir = sprintf('../../data/SFR%i',subjnum);
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii.gz'));
+brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii'));
 brainmask = logical(brainmask);
 
 %% sample every other voxel from the mask
