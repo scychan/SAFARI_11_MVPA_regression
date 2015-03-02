@@ -141,8 +141,8 @@ end
 %% save results
 
 results_name = sprintf('vox%i_%s',args.ivox,datestr(now,'mmddyy_HHSS'));
-results_dir = sprintf('../../results/searchlights/radius%i/penalty%g/CLO%i/%s/searchlights/%s',...
-    args.searchlight_radius,args.penalty,args.subjID,args.analysis,results_name);
+results_dir = sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i/searchlights/%s',...
+    args.searchlight_radius,args.penalty,args.subjID,results_name);
 mkdir_ifnotexist(results_dir);
 
 save(fullfile(results_dir,'args'),'args')
