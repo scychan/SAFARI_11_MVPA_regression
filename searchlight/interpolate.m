@@ -1,34 +1,24 @@
-function interpolate(subjnum,analysis,varargin)
+function interpolate(subjnum,varargin)
 % INPUTS
 % subjnum - e.g. 109
-% analysis - e.g. 'CLO_preceding_category'
 % 
 % EXAMPLE
-% subjnum = 109, analysis = 'CLO_current_category', varargin = {}
+% subjnum = 101, varargin = {}
 
 %% parse inputs
 
 % optional arguments
-pairs = {'searchlight_radius'    2          % radius of sphere (smallest = radius 1 = one voxel)
-	 'penalty'               0          % regularization penalty
+pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radius 1 = one voxel)
+         'penalty'               1          % regularization penalty
          'interpolate_method'    'linear'   % method of interpolation ('linear' or 'spline')
          'visualize'             0};        % show visualization
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
-if isrondo || isdella
-    str2num_set('subjnum')
-    if any(strcmp(varargin,'searchlight_radius'))
-    	str2num_set('searchlight_radius')
-    end
-    if any(strcmp(varargin,'penalty'))
-    	str2num_set('penalty')
-    end
-end
+str2num_set('subjnum','searchlight_radius','penalty')
 
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
-fprintf('analysis: %s\n',analysis)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 
 % set path
@@ -36,11 +26,11 @@ addpath('helpers')
 
 %% load searchlight results and masks
 
-resultsdir = sprintf('../results/radius%i/penalty%g/CLO%i',searchlight_radius,penalty,subjnum);
+resultsdir = sprintf('../../results/radius%i/penalty%g/SFR%i',searchlight_radius,penalty,subjnum);
 
 % load
 load(fullfile(resultsdir,'precomputations','masks'))
-load(fullfile(resultsdir,analysis,'allvoxels'),'voxels_meanperf')
+load(fullfile(resultsdir,'allvoxels'),'voxels_meanperf')
 
 % basics
 nvox_checker = length(voxels_meanperf);
@@ -56,17 +46,6 @@ tofill = brainmask - checkermask;
 tofill_inds = find(tofill);
 [tofill_subs.x, tofill_subs.y, tofill_subs.z] = ind2sub(size(tofill),tofill_inds);
 nvox_fill = length(tofill_inds);
-
-%% re-zero -- everything relative to chance
-
-switch analysis
-    case 'CLO_current_category'
-        chance = 1/3;
-    case 'CLO_preceding_category'
-        chance = 1/2;
-end
-
-voxels_meanperf = voxels_meanperf - chance;
 
 %% interpolate
 
@@ -113,10 +92,10 @@ end
 
 voxelsize = [3 3 3];
 
-save_nifti(interpolated,fullfile(resultsdir,analysis,'interpolated.nii.gz'),voxelsize);
+save_nifti(interpolated,fullfile(resultsdir,'interpolated.nii.gz'),voxelsize);
 
 %% save the result
 
-params = var2struct(subjnum,analysis,searchlight_radius,interpolate_method); %#ok<NASGU>
-save(fullfile(resultsdir,analysis,'interpolated.mat'),...
+params = var2struct(subjnum,searchlight_radius,interpolate_method); %#ok<NASGU>
+save(fullfile(resultsdir,'interpolated.mat'),...
     'params','interpolated')
