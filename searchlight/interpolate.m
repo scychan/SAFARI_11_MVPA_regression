@@ -26,7 +26,7 @@ addpath('helpers')
 
 %% load searchlight results and masks
 
-resultsdir = sprintf('../../results/radius%i/penalty%g/SFR%i',searchlight_radius,penalty,subjnum);
+resultsdir = sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i',searchlight_radius,penalty,subjnum);
 
 % load
 load(fullfile(resultsdir,'precomputations','masks'))
