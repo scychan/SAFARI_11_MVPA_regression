@@ -21,6 +21,7 @@ if [ ! $copyall = 'y' ]; then
     read -p 'Copy EPIs? (y/n) ' copyEPIs
     read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
     read -p 'Copy regressors/selectors? (y/n) ' copyregs
+    read -p 'Copy transforms? (y/n) ' copytransforms
 fi
 
 
@@ -53,6 +54,16 @@ for subj in $subjnums; do
     # load regressors/selectors
     if [ $copyall = 'y' ] || [ $copyregs = 'y' ]; then
 	copy $SFR/11_MVPA_regression/results/regressors/SFR$subj/* $subjdir
+    fi
+
+    # load transforms
+    if [ $copyall = 'y' ] || [ $copytransforms = 'y' ]; then
+	for epiname in run1 run2 run3 run4 restepi; do
+	    regdir=$SFR/6_fMRI_data/SFR$subj/feat_preproc/${epiname}_mc_fmu.feat/reg/
+	    localregdir=$subjdir/transforms/$epiname
+	    mkdir_ifnotexist $localregdir
+	    copy $regdir/*.mat $localregdir
+	done
     fi
     
 done
