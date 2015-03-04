@@ -14,3 +14,5 @@
 - interpolate.m
 
 - transform.sh
+
+- subjavg.sh
