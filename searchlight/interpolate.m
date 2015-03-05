@@ -1,9 +1,4 @@
 function interpolate(subjnum,varargin)
-% INPUTS
-% subjnum - e.g. 109
-% 
-% EXAMPLE
-% subjnum = 101, varargin = {}
 
 %% parse inputs
 
