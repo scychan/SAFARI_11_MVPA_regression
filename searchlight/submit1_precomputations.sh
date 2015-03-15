@@ -3,7 +3,7 @@
 subjnums=$1
 searchlight_radius=$2
 penalty=$3
-zscore=$4
+dozscore=$4
 
 # main options
 if ismachine rondo; then
@@ -15,6 +15,6 @@ fi
 
 # submit precomputations
 for subjnum in $subjnums; do
-    submit_short precomputations.m $subjnum $ngroups_max searchlight_radius $searchlight_radius penalty $penalty zscore $zscore
+    submit_short precomputations.m $subjnum $ngroups_max searchlight_radius $searchlight_radius penalty $penalty dozscore $dozscore
     sleep 1
 done
