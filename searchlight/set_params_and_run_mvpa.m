@@ -3,12 +3,13 @@ function set_params_and_run_mvpa(subjnum,varargin)
 % optional arguments
 pairs = {'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1    % regularization penalty for ridge regression
+         'zscore'                1    % whether to zscore
          'groupnum'              []   % can manually enter, when not submitting array jobs
          'voxels_to_run'         []}; % can manually override the "groups" settings
 parseargs(varargin,pairs);
 
 % convert string inputs to numbers, if necessary
-str2num_set('subjnum','searchlight_radius','penalty','groupnum','voxels_to_run')
+str2num_set('subjnum','searchlight_radius','penalty','zscore','groupnum','voxels_to_run')
 
 % get Rondo/Della array task ID #
 if isempty(groupnum) && isempty(voxels_to_run) %#ok<NODEF>
@@ -27,6 +28,7 @@ fprintf('groupnum: %i\n',groupnum)
 args.subjID = subjnum;
 args.searchlight_radius = searchlight_radius;
 args.penalty = penalty;
+args.zscore = zscore;
 args.groupnum = groupnum;
 
 %% add MVPA toolbox to the path
@@ -46,7 +48,6 @@ args.regs = 'regs';
 
 args.shiftTRs = 2;
 args.fwhm = 0;
-args.zscore = 1;
 
 args.classifier = 'ridge';
 args.penalty = penalty;
@@ -62,8 +63,8 @@ disp(args)
 %% get group info
 % load: groups, volume_size, voxel_spheres
 
-load(sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i/precomputations/groupinfo',...
-    searchlight_radius,penalty,subjnum))
+baseoutdir = get_baseoutdir(searchlight_radius,penalty,zscore,subjnum);
+load(fullfile(baseoutdir,'precomputations/groupinfo'))
 
 if isempty(voxels_to_run) %#ok<NODEF>
     voxels_to_run = groups.starts(groupnum) : groups.ends(groupnum);
