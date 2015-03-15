@@ -63,8 +63,8 @@ disp(args)
 %% get group info
 % load: groups, volume_size, voxel_spheres
 
-baseoutdir = get_baseoutdir(searchlight_radius,penalty,dozscore,subjnum);
-load(fullfile(baseoutdir,'precomputations/groupinfo'))
+basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+load(fullfile(basedir,'precomputations/groupinfo'))
 
 if isempty(voxels_to_run) %#ok<NODEF>
     voxels_to_run = groups.starts(groupnum) : groups.ends(groupnum);

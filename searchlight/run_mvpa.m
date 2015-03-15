@@ -142,7 +142,7 @@ end
 
 results_name = sprintf('vox%i_%s',args.ivox,datestr(now,'mmddyy_HHSS'));
 
-basedir = get_basedir(args.searchlight_radius,args.penalty,args.zscore,args.subjnum);
+basedir = get_basedir(args.searchlight_radius,args.penalty,args.zscore,args.subjID);
 results_dir = fullfile(basedir,'/searchlights',results_name);
 mkdir_ifnotexist(results_dir);
 
