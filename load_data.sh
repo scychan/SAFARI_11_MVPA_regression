@@ -19,6 +19,7 @@ read -p 'Copy all data? (y/n) ' copyall
 if [ ! $copyall = 'y' ]; then
     read -p 'Copy run lengths? (y/n) ' copyrunlens
     read -p 'Copy EPIs? (y/n) ' copyEPIs
+    read -p 'Copy non-smoothed EPIs? (y/n) ' copynosmoothEPIs
     read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
     read -p 'Copy regressors/selectors? (y/n) ' copyregs
     read -p 'Copy transforms? (y/n) ' copytransforms
@@ -28,7 +29,8 @@ fi
 # iterate through subjects
 for subj in $subjnums; do
 
-    # make data directory
+    # directories
+    featdir=$SFR/6_fMRI_data/SFR$subj/feat_preproc
     subjdir=../data/SFR$subj
     mkdir_ifnotexist $subjdir
   
@@ -44,6 +46,20 @@ for subj in $subjnums; do
 	fslroi $subjdir/big4D_mc_fmu $subjdir/big4D_mc_fmu_runs 0 $sumTRs
 	gunzip $subjdir/big4D_mc_fmu_runs.nii.gz
 	rm $subjdir/big4D_mc_fmu.nii.gz
+    fi
+    
+    # Load non-smoothed EPI data (concatenate runs together, and gunzip)
+    if [ $copyall = 'y' ] || [ $copynosmoothEPIs = 'y' ]; then
+	nosmoothfile=$subjdir/big4D_mc_fmu_runs_nosmooth
+	cmdstr="fslmerge -tr $nosmoothfile"
+	for run in {1..4}; do
+	    localrunfile=$subjdir/run${run}_mc_fmu_nosmooth.nii.gz
+	    copy $featdir/run${run}_mc_fmu_nosmooth.feat/filtered_func_data.nii.gz $localrunfile
+	    cmdstr="$cmdstr $localrunfile"
+    	done
+	cmdstr="$cmdstr 2"
+	`$cmdstr`
+	gunzip ${nosmoothfile}.nii.gz
     fi
 
      # load wholebrain masks
