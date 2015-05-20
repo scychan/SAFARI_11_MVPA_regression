@@ -1,4 +1,4 @@
-function make_regressors(subjnum)
+function make_runs_selector(subjnum)
 
 %% set directory for saving regressors and selectors
 
@@ -47,27 +47,6 @@ TR.stim_onset = round(T.stim_onset/TRsecs) + 1;
 
 % to check
 figure; plot(reshape(TR.stim_onset',1,nstim),'.')
-
-%% make regressors -- one for each zone
-% posterior P(zone|animals so far), at the time of each stimulus
-
-% load the posteriors
-posteriors = [stimlist.trials.posteriors_new{episess}];
-posteriors = vertcat(posteriors{:});
-
-% make regs
-regs = zeros(4,totTR);
-for istim = 1:nstim
-    regs(:,TR.stim_onset(istim)) = posteriors(istim,:);
-    regs(:,TR.stim_onset(istim)+1) = posteriors(istim,:);
-end
-
-% to check
-figure; plot(regs','.')
-
-% save the regs
-save(fullfile(outdir,'regs'),'regs')
-
 
 %% make runs selector - for cross-validation
 
