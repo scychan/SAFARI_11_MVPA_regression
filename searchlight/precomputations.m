@@ -74,7 +74,7 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
 outdir = fullfile(basedir,'precomputations');
 mkdir_ifnotexist(outdir)
 

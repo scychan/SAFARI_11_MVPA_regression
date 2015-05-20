@@ -1,4 +1,4 @@
-function basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum)
+function basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum)
 
-basedir = sprintf('../../results/searchlights/radius%i/penalty%g/zscore%i/SFR%i',...
-    searchlight_radius,penalty,dozscore,subjnum);
+basedir = sprintf('../../results/searchlights/%s/radius%i/penalty%g/zscore%i/SFR%i',...
+    analysis,searchlight_radius,penalty,dozscore,subjnum);

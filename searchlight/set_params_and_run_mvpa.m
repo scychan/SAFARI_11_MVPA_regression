@@ -74,7 +74,7 @@ disp(args)
 %% get group info
 % load: groups, volume_size, voxel_spheres
 
-basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
 load(fullfile(basedir,'precomputations/groupinfo'))
 
 if isempty(voxels_to_run) %#ok<NODEF>

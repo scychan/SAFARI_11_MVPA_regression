@@ -1,4 +1,4 @@
-function compile_results(subjnum,varargin)
+function compile_results(subjnum,analysis,varargin)
 % subjnum = 101, varargin = {};
 
 %% parse inputs
@@ -23,7 +23,7 @@ fprintf('dozscore: %g\n',dozscore)
 %% basics
 
 % path to results
-basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
 resultsdir = basedir;
 
 %% load masks
