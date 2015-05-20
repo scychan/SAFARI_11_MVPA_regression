@@ -29,7 +29,7 @@ resultsdir = basedir;
 %% load masks
 
 load(fullfile(resultsdir,'precomputations/masks'))
-nvox = sum(checkermask(:));
+nvox = sum(brainmask(:));
 
 %% load MVPA results for every voxel
 
@@ -53,8 +53,8 @@ end
 %% save as nifti
 
 % compile results into a volume
-compiled = nan(size(checkermask));
-compiled(checkermask) = voxels_meanperf;
+compiled = nan(size(brainmask));
+compiled(brainmask) = voxels_meanperf;
 
 % save nifti
 voxelsize = [3 3 3];

@@ -34,32 +34,13 @@ fprintf('==> loading brain mask... \n')
 
 brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii'));
 brainmask = logical(brainmask);
-
-%% sample every other voxel from the mask
-
-fprintf('==> making checkermask... \n')
-
-% checkerboard for the whole volume
-checkerboard = zeros(size(brainmask));
-for i = 1:size(brainmask,1)
-    for j = 1:size(brainmask,2)
-        for k = 1:size(brainmask,3)
-            if mod(i+j+k,2)
-                checkerboard(i,j,k) = 1;
-            end
-        end
-    end
-end
-
-% conjunction of checkerboard and brainmask
-checkermask = brainmask & checkerboard;
-nvox = sum(checkermask(:));
+nvox = sum(brainmask(:));
 
 %% pre-compute the spheres around each voxel
 
 fprintf('==> computing voxel spheres... \n')
 
-voxel_spheres = compute_spheres(brainmask,checkermask,searchlight_radius);
+voxel_spheres = compute_spheres(brainmask,brainmask,searchlight_radius);
 
 %% assign voxels to groups
 
@@ -90,5 +71,5 @@ volume_size = size(brainmask);
 save(fullfile(outdir,'groupinfo'),'groups','voxel_spheres','volume_size')
 
 % save masks
-save(fullfile(outdir,'masks'),'brainmask','checkermask')
+save(fullfile(outdir,'masks'),'brainmask')
 
