@@ -1,4 +1,4 @@
-function precomputations(subjnum,ngroups_max,varargin)
+function precomputations(subjnum,analysis,ngroups_max,varargin)
 
 % subjnum = 101, ngroups_max = 5000, varargin={}
 
@@ -18,6 +18,7 @@ end
 
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
+fprintf('analysis: %s\n',analysis)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 fprintf('penalty: %g\n',penalty)
 fprintf('dozscore: %i\n',dozscore)

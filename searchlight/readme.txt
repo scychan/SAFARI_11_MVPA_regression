@@ -2,7 +2,7 @@
 	calls precomputations.m
 
 - submit2_rungroups.sh
-	calls set_params_and_run_mvpa.m, run_mvpa.m
+    calls set_params_and_run_mvpa.m, run_mvpa.m
 
 - if any missed voxels:
      - check_searchlight_results.sh

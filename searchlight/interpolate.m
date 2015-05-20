@@ -1,10 +1,11 @@
-function interpolate(subjnum,varargin)
+function interpolate(subjnum,analysis,varargin)
 
 %% parse inputs
 
 % optional arguments
 pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1          % regularization penalty
+         'dozscore'              1          % whether to zscore
          'interpolate_method'    'linear'   % method of interpolation ('linear' or 'spline')
          'visualize'             0};        % show visualization
 parseargs(varargin,pairs);
@@ -21,7 +22,7 @@ addpath('helpers')
 
 %% load searchlight results and masks
 
-resultsdir = sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i',searchlight_radius,penalty,subjnum);
+resultsdir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
 
 % load
 load(fullfile(resultsdir,'precomputations','masks'))

@@ -2,12 +2,14 @@
 # Transform 'interpolated' from subject space to standard space
 
 subj=$1
-radius=$2
-penalty=$3
+analysis=$2
+radius=$3
+penalty=$4
+zscore=$5
 
 # basics
 datadir=../../data/SFR$subj
-resultsdir=../../results/searchlights/radius$radius/penalty$penalty/SFR$subj
+resultsdir=../../results/searchlights/$analysis/radius$radius/penalty$penalty/zscore$zscore/SFR$subj
 standard=$FSLDIR/data/standard/MNI152_T1_2mm_brain
 
 # transform 'interpolated' to standard space
