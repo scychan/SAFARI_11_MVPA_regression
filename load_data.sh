@@ -7,11 +7,16 @@ if ismachine rondo; then
     alias copy='rsync -av'
 else
     echo 'is not rondo'
-    alias copy='rsfa -f'
+    read -p 'copy through Nobel? (y/n)' throughNobel
+    if [ $throughNobel = 'y' ]; then
+	alias copy='rsfan'
+    else
+	alias copy='rsfa -f'
+    fi
 fi
 
 # subjnums and directory shortcuts
-subjnums='115 116 117 118 119 120 121 122 123 124 125 126 127 129 130 131 132 133 134' # 101 102 103 104 105 106 107 108 109 110 112 113 114
+subjnums='101 102 103 104 105 106 107 108 109 110 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 129 130 131 132 133 134'
 SFR='/jukebox/norman/stephanie/safari'
 
 # Prompt for instructions
