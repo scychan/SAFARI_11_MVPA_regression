@@ -27,7 +27,7 @@ fprintf('groupnum: %i\n',groupnum)
 % save to args
 args.subjID = subjnum;
 args.searchlight_radius = searchlight_radius;
-args.classifier = classifier;
+args.analysis = analysis;
 args.penalty = penalty;
 args.zscore = dozscore;
 args.groupnum = groupnum;
