@@ -7,7 +7,12 @@ if ismachine rondo; then
     alias copy='rsync -av'
 else
     echo 'is not rondo'
-    alias copy='rsfa -f'
+    read -p 'copy through Nobel? (y/n)' throughNobel
+    if [ $throughNobel = 'y' ]; then
+	alias copy='rsfan'
+    else
+	alias copy='rsfa -f'
+    fi
 fi
 
 # subjnums and directory shortcuts

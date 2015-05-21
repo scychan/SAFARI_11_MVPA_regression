@@ -12,3 +12,4 @@ Scripts:
 2. make_regressors.m
 3. load_data.sh
 4. searchlight/readme.txt
+5. analyze_results/readme.txt
