@@ -1,4 +1,4 @@
-function [] = run_mvpa(args,results_name)
+function [] = run_mvpa_init(args,results_name)
 % INPUTS:
 % args.subjID
 % args.runs         - which runs file to use? 
@@ -17,9 +17,17 @@ function [] = run_mvpa(args,results_name)
 % results_name      - name of directory storing MVPA results
 
 
-%% set paths
+%% basics
 
+% path to data
 data_dir = fullfile('../data',args.subjID);
+
+% path to tempdata dir
+tempdata_dir = fullfile('../tempdata',args.subjID);
+mkdir_ifnotexist(tempdata_dir);
+
+% nsectors
+nsectors = 4;
 
 %% initialize the 'subj' structure
 
@@ -49,12 +57,11 @@ if isempty(args.runs)
 else
     runsname = ['runs_' args.runs];
 end 
-load(fullfile(data_dir,runsname))
+load(fullfile(data_dir,runsname)) % load 'runs'
 
 selsname = 'runs';
 subj = init_object(subj,'selector',selsname);
 subj = set_mat(subj,'selector',selsname,runs); 
-clear runs
 
 % % for blocking out unwanted TRs, e.g. CT for FRonly
 % blocker_selsname = 'blocker';
@@ -128,137 +135,52 @@ if args.zscore == 1
     epiname = [epiname '_z'];
 end
 
-%% make cross-validation indices
+%% make cross-validation indices for inner loops
+%     => xvalnames{isector} = selector group selsname_xvalcond$isector
+% OR  => xvalname = selector selsname_nested_xval
+
+subj = create_nested_xvalid_indices(subj,selsname,...
+    'actives_selname',actives_selname);
+innerxvalname = [selsname '_nested_xval'];
+
+%% make cross-validation indices for outer loop
 %     => xvalnames{isector} = selector group selsname_xvalcond$isector
 % OR  => xvalname = selector selsname_xval
 
 subj = create_xvalid_indices(subj,selsname,...
     'actives_selname',actives_selname);
 %     'actives_selname',{actives_selname,blocker_selsname});
-xvalname = [selsname '_xval'];
+outerxvalname = [selsname '_xval'];
+
+% ungroup 
+% (so that can be entered separately to feature_select and cross_validation)
+for iter = unique(runs)
+    subj = set_objfield(subj,...
+        'selector',sprintf('%s_%i',outerxvalname,iter),...
+        'group_name',sprintf('%s_%i',outerxvalname,iter),...
+        'ignore_absence',true);
+end
 
 %% separate regressors
 % necessary for some things
 
-if strcmp(args.featsel_type,'corr')
+if ismember('corr',args.featsel_types)
     subj = separate_regressors(subj,regsname);
-    for isector = 1:4
+    for isector = 1:nsectors
         regsnames_separated{isector} = sprintf('%s_%i',regsname,isector);
     end
 end
 
-%% feature selection
-% use the same selectors that will be used in cross-validation
-% => featselname OR featselnames{isector}
+%% save necessary info for next steps 
 
-switch args.featsel_type
-    case 'none'
-        %== No feature selection ==%
-        featselname = maskname;
-        
-    case 'corr'
-        %== Correlation-based feature selection ==%
-        for isector = 1:4
-            subj = feature_select(subj,epiname, ...
-                regsnames_separated{isector}, xvalname, ...
-                'statmap_funct','statmap_xcorr', ...
-                'statmap_arg', [], ...
-                'new_map_patname', sprintf('stat_sector%i',isector), ...
-                'thresh', []);
-            featselnames{isector} = sprintf('featselmask_sector%i',isector);
-            subj = create_sorted_mask(subj, sprintf('stat_sector%i',isector), featselnames{isector}, args.featsel_thresh,'descending',1);
-        end
-        
-    case 'anova'
-        %== ANOVA-based feature selection ==%
-        subj = feature_select(subj,epiname,regsname,xvalname,...
-            'thresh',args.featsel_thresh);
-        featselname = [epiname '_thresh' num2str(args.anovathresh)];
-end
+% save the workspace
+save(fullfile(tempdata_dir,'init_workspace'))
 
-%% classification
-
-switch(args.classifier)
-    
-    case 'gnb'
-        class_args.train_funct_name = 'train_gnb';
-        class_args.test_funct_name = 'test_gnb';
-        
-    case 'bp'
-        class_args.train_funct_name = 'train_bp';
-        class_args.test_funct_name = 'test_bp';
-        class_args.nHidden = 0;
-        
-    case 'L2logreg'
-        class_args.train_funct_name = 'train_L2_RLR';
-        class_args.test_funct_name = 'test_L2_RLR';
-        class_args.penalty = args.penalty;
-        class_args.lambda = 'crossvalidation'; % XX-- peeking??
-        
-    case 'logreg'
-        class_args.train_funct_name = 'train_logreg';
-        class_args.test_funct_name = 'test_logreg';
-        class_args.penalty = args.penalty;
-        
-    case 'ridge'
-        class_args.train_funct_name = 'train_ridge';
-        class_args.test_funct_name = 'test_ridge';
-        class_args.penalty = args.penalty;
-        
-    otherwise
-        disp('(-) unknown classifier type!');
-        return
-        
-end
-
-if strcmp(args.classifier,'ridge')
-    if strcmp(args.featsel_type,'corr')
-        for isector = 1:4
-            [subj results{isector}] = cross_validation(subj,epiname,regsnames_separated{isector},...
-                xvalname,featselnames{isector},class_args,...
-                'perfmet_functs','perfmet_xcorr');
-        end
-    else
-        [subj results] = cross_validation(subj,epiname,regsname,...
-            xvalname,featselname,class_args,...
-            'perfmet_functs','perfmet_xcorr');
-    end
-else
-    [subj results] = cross_validation(subj,epiname,regsname,...
-                     xvalname,featselname,class_args);
-end
-
-%% make plots for results
-
-makefigs = 0;
-if makefigs
-    fig1 = mvpa_confusion_matrix(results,condnames);
-    fig2 = mvpa_plot_v_time(results,condnames);
-    
-    saveas(fig1,fullfile(results_dir,'confusion_matrix.fig'))
-    saveas(fig2,fullfile(results_dir,'timeplot.fig'))
-end
-
-%% save results
-
-% results_name
-if ~exist('results_name','var')
-    results_name = 'results';
-end
-full_results_name = sprintf('%s_%s',datestr(now,'mmddyy_HHSS'),results_name);
-
-% results_dir
-results_dir = sprintf('../results/mvpa_results/featsel%i/penalty%g/%s/%s',...
-    args.featsel_thresh, args.penalty, args.subjID, full_results_name);
-mkdir_ifnotexist(results_dir)
-
-% % clear the mask and the functional patterns, which are large
-% subj = remove_mat(subj,'pattern',epiname);
-% subj = remove_mat(subj,'mask',maskname);
-
-save(fullfile(results_dir,'args'),'args')
-% save(fullfile(results_dir,'subj'),'subj')
-save(fullfile(results_dir,'results'),'results')
-
-% saveas(fig1,fullfile(results_dir,'confusion_matrix.eps'))
-% saveas(fig2,fullfile(results_dir,'timeplot.eps'))
+% save n_inner_loops
+n_inner_loops = prod([length(unique(runs)),...
+    length(args.penalty_multipliers),...
+    length(args.featsel_types),...
+    length(args.featsel_threshes)]);
+fid = fopen(fullfile(tempdata_dir,'n_inner_loops.txt'),'w');
+fprintf(fid,'%i',n_inner_loops)
+fclose('all');
