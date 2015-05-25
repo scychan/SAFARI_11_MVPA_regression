@@ -5,23 +5,26 @@ function compile_results(subjnum,varargin)
 
 % optional arguments
 pairs = {'searchlight_radius'    3   % radius of sphere (smallest = radius 1 = one voxel)
-         'penalty'               1 };% regularization penalty
+         'penalty'               1   % regularization penalty
+         'dozscore'                1}; % whether to zscore
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
 if isrondo || isdella
-    str2num_set('subjnum','searchlight_radius','penalty')
+    str2num_set('subjnum','searchlight_radius','penalty','dozscore')
 end
 
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 fprintf('penalty: %g\n',penalty)
+fprintf('dozscore: %g\n',dozscore)
 
 %% basics
 
 % path to results
-resultsdir = sprintf('../../results/searchlights/radius%i/penalty%g/SFR%i',searchlight_radius,penalty,subjnum);
+basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+resultsdir = basedir;
 
 %% load masks
 

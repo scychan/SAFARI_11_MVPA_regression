@@ -6,24 +6,22 @@ function precomputations(subjnum,ngroups_max,varargin)
 
 % optional arguments
 pairs = {'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
-         'penalty'               1};  % regularization penalty for logistic regression
+         'penalty'               1    % regularization penalty for logistic regression
+         'dozscore'              1    % whether to zscore
+         'smoothedEPIs'          0 }; % whether to use smoothed EPIs
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
 if isrondo || isdella
-    str2num_set('subjnum','ngroups_max')
-    if any(strcmp(varargin,'searchlight_radius'))
-    	str2num_set('searchlight_radius')
-    end
-    if any(strcmp(varargin,'penalty'))
-    	str2num_set('penalty')
-    end
+    str2num_set('subjnum','ngroups_max','searchlight_radius','penalty','dozscore','smoothedEPIs')
 end
 
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 fprintf('penalty: %g\n',penalty)
+fprintf('dozscore: %i\n',dozscore)
+fprintf('smoothedEPIs: %i\n',smoothedEPIs)
 
 %% filepaths
 
@@ -76,8 +74,8 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-outdir = sprintf('../../results/radius%i/penalty%g/SFR%i/precomputations',...
-    searchlight_radius,penalty,subjnum);
+basedir = get_basedir(searchlight_radius,penalty,dozscore,subjnum);
+outdir = fullfile(basedir,'precomputations');
 mkdir_ifnotexist(outdir)
 
 % print out ngroups to a text file (to be read by submit_searchlight_2.sh)
