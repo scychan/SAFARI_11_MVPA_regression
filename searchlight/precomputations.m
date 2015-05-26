@@ -5,7 +5,8 @@ function precomputations(subjnum,analysis,ngroups_max,varargin)
 %% parse inputs
 
 % optional arguments
-pairs = {'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
+pairs = {'mask'                 'wholebrain'
+         'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1    % regularization penalty for logistic regression
          'dozscore'              1    % whether to zscore
          'smoothedEPIs'          0 }; % whether to use smoothed EPIs
@@ -19,6 +20,7 @@ end
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
 fprintf('analysis: %s\n',analysis)
+fprintf('mask: %s\n',mask)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 fprintf('penalty: %g\n',penalty)
 fprintf('dozscore: %i\n',dozscore)
@@ -28,11 +30,11 @@ fprintf('smoothedEPIs: %i\n',smoothedEPIs)
 
 datadir = sprintf('../../data/SFR%i',subjnum);
 
-%% load wholebrain mask
+%% load mask
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii'));
+brainmask = load_nifti(sprintf('%s/mask_%s.nii.gz',datadir,mask));
 brainmask = logical(brainmask);
 nvox = sum(brainmask(:));
 
