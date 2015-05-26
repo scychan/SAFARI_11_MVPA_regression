@@ -34,7 +34,7 @@ datadir = sprintf('../../data/SFR%i',subjnum);
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(sprintf('%s/mask/%s.nii.gz',datadir,mask));
+brainmask = load_nifti(sprintf('%s/masks/%s.nii.gz',datadir,mask));
 brainmask = logical(brainmask);
 nvox = sum(brainmask(:));
 
@@ -47,7 +47,11 @@ voxel_spheres = compute_spheres(brainmask,brainmask,searchlight_radius);
 %% assign voxels to groups
 
 fprintf('==> assign voxels to groups... \n')
-nvox_eachgroup = ceil(nvox/ngroups_max);
+if (ngroups_max / nvox) > 10
+    nvox_eachgroup = ceil(nvox/ngroups_max);
+else
+    nvox_eachgroup = 10;
+end
 ngroups = ceil(nvox/nvox_eachgroup);
 groups.starts = (0:ngroups-1) * nvox_eachgroup + 1;
 groups.ends = (1:ngroups) * nvox_eachgroup;
@@ -58,7 +62,7 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 outdir = fullfile(basedir,'precomputations');
 mkdir_ifnotexist(outdir)
 

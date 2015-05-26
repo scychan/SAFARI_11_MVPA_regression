@@ -4,7 +4,7 @@ function set_params_and_run_mvpa(subjnum,analysis,varargin)
 pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1          % regularization penalty for ridge regression
          'dozscore'              1          % whether to zscore
-	 'mask'                 'wholebrain'
+	 'mask'              'wholebrain'
          'groupnum'              []         % can manually enter, when not submitting array jobs
          'voxels_to_run'         []};       % can manually override the "groups" settings
 parseargs(varargin,pairs);
@@ -57,7 +57,7 @@ args.regs = ['regs_' analysis];
 
 args.subjID = subjnum;
 args.analysis = analysis;
-args.mask = mask;
+args.maskname = mask;
 
 args.shiftTRs = 2;
 args.fwhm = 0;
@@ -75,7 +75,7 @@ disp(args)
 %% get group info
 % load: groups, volume_size, voxel_spheres
 
-basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 load(fullfile(basedir,'precomputations/groupinfo'))
 
 if isempty(voxels_to_run) %#ok<NODEF>
