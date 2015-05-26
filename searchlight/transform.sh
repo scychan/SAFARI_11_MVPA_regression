@@ -18,4 +18,4 @@ echo 'Transforming to standard space...'
 transform=$datadir/transforms/run1/example_func2standard.mat
 orig=$resultsdir/compiled
 outfile=$resultsdir/transformed
-flirt -in $orig -ref $standard -applyxfm -init $transform -out $outfile.nii.gz
+flirt -interp nearestneighbour -in $orig -ref $standard -applyxfm -init $transform -out $outfile.nii.gz
