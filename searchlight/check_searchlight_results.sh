@@ -4,9 +4,10 @@ analysis=$2
 radius=$3
 penalty=$4
 zscore=$5
+mask=$6
 
 # resultsdir
-resultsdir=../../results/searchlights/$analysis/radius$radius/penalty$penalty/zscore$zscore/SFR$subjnum
+resultsdir=../../results/searchlights/$analysis/radius$radius/penalty$penalty/zscore$zscore/mask$mask/SFR$subjnum
 echo $resultsdir
 
 # get nvox

@@ -34,7 +34,7 @@ datadir = sprintf('../../data/SFR%i',subjnum);
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(sprintf('%s/mask_%s.nii.gz',datadir,mask));
+brainmask = load_nifti(sprintf('%s/mask/%s.nii.gz',datadir,mask));
 brainmask = logical(brainmask);
 nvox = sum(brainmask(:));
 

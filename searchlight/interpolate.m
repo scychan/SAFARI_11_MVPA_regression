@@ -7,7 +7,8 @@ pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radiu
          'penalty'               1          % regularization penalty
          'dozscore'              1          % whether to zscore
          'interpolate_method'    'linear'   % method of interpolation ('linear' or 'spline')
-         'visualize'             0};        % show visualization
+         'visualize'             0          % show visualization
+	 'mask'                'wholebrain'};
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
@@ -22,7 +23,7 @@ addpath('helpers')
 
 %% load searchlight results and masks
 
-resultsdir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
+resultsdir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 
 % load
 load(fullfile(resultsdir,'precomputations','masks'))
