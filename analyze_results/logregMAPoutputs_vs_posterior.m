@@ -1,4 +1,4 @@
-function logregMAPoutputs_vs_posterior(subjnum,multinomial,varargin)
+function logregMAPoutputs_vs_posterior(subjnum,varargin)
 
 %% parse inputs
 
@@ -16,11 +16,7 @@ addpath('../searchlight')
 %% load the results
 
 % results directory
-if multinomial
-    analysis = 'logregMAPmulti';
-else
-    analysis = 'logregMAP';
-end
+analysis = 'logregMAP';
 basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 
 % get nvox

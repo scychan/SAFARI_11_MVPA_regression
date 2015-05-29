@@ -69,10 +69,15 @@ switch analysis
         % to check
         figure; plot(regs','.')
         
-    case 'logregMAPmulti'
+        % save the regs
+        regsname = ['regs_' analysis];
+        save(fullfile(outdir,regsname), 'regs')
+        
+    case 'logregMAP'
         % for each sector:
         %   1 if sector is MAP
         %   0 otherwise
+        % 10 sets of regressors, each randomly subsampled to get equal numbers in each condition
         
         % load the posteriors
         posteriors = [stimlist.trials.posteriors_new{episess}];
@@ -81,27 +86,46 @@ switch analysis
         % find MAP for each timepoint
         [~, MAP] = max(posteriors,[],2);
         
-        % make regs
-        regs = zeros(4,totTR);
-        for istim = 1:nstim
-            regs(MAP(istim), TR.stim_onset(istim)) = 1;
-            regs(MAP(istim), TR.stim_onset(istim)+1) = 1;
-        end
+        % num in each class
+        MAPhist = hist(MAP,1:4);
+        num_to_rm = MAPhist - min(MAPhist);
         
-        % to check
-        figure; hold on
-        plot(regs','.')
-        postregs = zeros(4,totTR);
-        for istim = 1:nstim
-            postregs(:,TR.stim_onset(istim)) = posteriors(istim,:);
-            postregs(:,TR.stim_onset(istim)+1) = posteriors(istim,:);
+        % set random seed
+        setseedwclock;
+        
+        % make 10 sets of regressors (randomly subsampling each time)
+        for iter = 1:10
+            
+            % randomly subsample the larger classes
+            iterMAP = MAP;
+            for sector = 1:4
+                sectorinds = find(MAP == sector);
+                sectorinds = sectorinds(randperm(MAPhist(sector)));
+                iterMAP(sectorinds(1:num_to_rm(sector))) = 0;
+            end
+            
+            % make regs
+            regs = zeros(4,totTR);
+            for istim = 1:nstim
+                if iterMAP(istim) > 0
+                    regs(iterMAP(istim), TR.stim_onset(istim)) = 1;
+                    regs(iterMAP(istim), TR.stim_onset(istim)+1) = 1;
+                end
+            end
+            
+            % to check
+            figure; hold on
+            plot(regs','.')
+            postregs = zeros(4,totTR);
+            for istim = 1:nstim
+                postregs(:,TR.stim_onset(istim)) = posteriors(istim,:);
+                postregs(:,TR.stim_onset(istim)+1) = posteriors(istim,:);
+            end
+            plot(postregs')
+            
+            % save the regs
+            regsname = sprintf('regs_%s_iter%i',analysis,iter);
+            save(fullfile(outdir,regsname), 'regs')
         end
-        plot(postregs')
 end
 
-
-%% save the regs
-
-regsname = ['regs_' analysis];
-
-save(fullfile(outdir,regsname), 'regs')

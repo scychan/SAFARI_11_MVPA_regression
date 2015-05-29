@@ -4,9 +4,10 @@ function set_params_and_run_mvpa(subjnum,analysis,varargin)
 pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1          % regularization penalty for ridge regression
          'dozscore'              1          % whether to zscore
-	 'mask'              'wholebrain'
+         'mask'              'wholebrain'
          'groupnum'              []         % can manually enter, when not submitting array jobs
-         'voxels_to_run'         []};       % can manually override the "groups" settings
+         'voxels_to_run'         []         % can manually override the "groups" settings
+         'iteration'             []};       % can set iteration, e.g. with randomly subsampled regressors
 parseargs(varargin,pairs);
 
 % convert string inputs to numbers, if necessary
@@ -32,6 +33,7 @@ args.analysis = analysis;
 args.penalty = penalty;
 args.zscore = dozscore;
 args.groupnum = groupnum;
+args.iteration = iteration;
 
 %% add MVPA toolbox to the path
 
@@ -46,12 +48,15 @@ switch analysis
     case 'ridge'
         args.classifier = 'ridge';
         
-    case 'logregMAPmulti'
+    case 'logregMAP'
         args.classifier = 'L2logreg';
 end
 
 args.runs = '';
 args.regs = ['regs_' analysis];
+if ~isempty(iteration)
+    args.regs = sprintf('%s_iter%i',args.regs,iteration);
+end
 
 %% set all other args
 

@@ -1,4 +1,4 @@
-See if logregMAP (or logregMAPmulti) outputs correlate with posterior:
+See if logregMAP outputs correlate with posterior:
 
 
 
