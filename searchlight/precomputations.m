@@ -5,7 +5,8 @@ function precomputations(subjnum,analysis,ngroups_max,varargin)
 %% parse inputs
 
 % optional arguments
-pairs = {'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
+pairs = {'mask'                 'wholebrain'
+         'searchlight_radius'    3    % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1    % regularization penalty for logistic regression
          'dozscore'              1    % whether to zscore
          'smoothedEPIs'          0 }; % whether to use smoothed EPIs
@@ -19,6 +20,7 @@ end
 % print parsed inputs
 fprintf('subjnum: %i\n',subjnum)
 fprintf('analysis: %s\n',analysis)
+fprintf('mask: %s\n',mask)
 fprintf('searchlight_radius: %i\n',searchlight_radius)
 fprintf('penalty: %g\n',penalty)
 fprintf('dozscore: %i\n',dozscore)
@@ -28,11 +30,11 @@ fprintf('smoothedEPIs: %i\n',smoothedEPIs)
 
 datadir = sprintf('../../data/SFR%i',subjnum);
 
-%% load wholebrain mask
+%% load mask
 
 fprintf('==> loading brain mask... \n')
 
-brainmask = load_nifti(fullfile(datadir,'mask_wholebrain.nii.gz'));
+brainmask = load_nifti(sprintf('%s/masks/%s.nii.gz',datadir,mask));
 brainmask = logical(brainmask);
 nvox = sum(brainmask(:));
 
@@ -45,7 +47,11 @@ voxel_spheres = compute_spheres(brainmask,brainmask,searchlight_radius);
 %% assign voxels to groups
 
 fprintf('==> assign voxels to groups... \n')
-nvox_eachgroup = ceil(nvox/ngroups_max);
+if (ngroups_max / nvox) > 10
+    nvox_eachgroup = ceil(nvox/ngroups_max);
+else
+    nvox_eachgroup = 10;
+end
 ngroups = ceil(nvox/nvox_eachgroup);
 groups.starts = (0:ngroups-1) * nvox_eachgroup + 1;
 groups.ends = (1:ngroups) * nvox_eachgroup;
@@ -56,7 +62,7 @@ groups.ends(end) = nvox;
 fprintf('==> save batch info... \n')
 
 % directory for saving
-basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 outdir = fullfile(basedir,'precomputations');
 mkdir_ifnotexist(outdir)
 

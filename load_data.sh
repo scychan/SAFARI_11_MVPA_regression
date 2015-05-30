@@ -25,7 +25,7 @@ if [ ! $copyall = 'y' ]; then
     read -p 'Copy run lengths? (y/n) ' copyrunlens
     read -p 'Copy EPIs? (y/n) ' copyEPIs
     read -p 'Copy non-smoothed EPIs? (y/n) ' copynosmoothEPIs
-    read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
+    read -p 'Copy brainmasks? (y/n) ' copybrainmasks
     read -p 'Copy regressors/selectors? (y/n) ' copyregs
     read -p 'Copy transforms? (y/n) ' copytransforms
 fi
@@ -67,9 +67,11 @@ for subj in $subjnums; do
 	gunzip ${nosmoothfile}.nii.gz
     fi
 
-     # load wholebrain masks
+     # load brain masks
     if [ $copyall = 'y' ] || [ $copybrainmasks = 'y' ]; then
-	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/mask_wholebrain.nii.gz
+	mkdir_ifnotexist $subjdir/masks
+	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/masks/wholebrain.nii.gz
+	copy $SFR/8_masks/SFR$subj/* $subjdir/masks/
     fi
 
     # load regressors/selectors
