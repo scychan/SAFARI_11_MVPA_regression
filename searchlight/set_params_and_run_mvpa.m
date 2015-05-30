@@ -11,7 +11,7 @@ pairs = {'searchlight_radius'    3          % radius of sphere (smallest = radiu
 parseargs(varargin,pairs);
 
 % convert string inputs to numbers, if necessary
-str2num_set('subjnum','searchlight_radius','penalty','dozscore','groupnum','voxels_to_run')
+str2num_set('subjnum','searchlight_radius','penalty','dozscore','groupnum','voxels_to_run','iteration')
 
 % get Rondo/Della array task ID #
 if isempty(groupnum) && isempty(voxels_to_run) %#ok<NODEF>
