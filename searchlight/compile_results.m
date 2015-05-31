@@ -65,10 +65,11 @@ compiled(brainmask) = voxels_meanperf;
 
 % save nifti
 voxelsize = [3 3 3];
-save_nifti(compiled,fullfile(resultsdir,'compiled.nii.gz'),voxelsize);
+save_nifti(compiled,sprintf('%s/compiled%i.nii.gz',resultsdir,iteration),voxelsize);
 
 %% save matlab files
 
-save(fullfile(resultsdir,'allvoxels'),...
-    'voxels_meanperf','compiled')
+save(fullfile(resultsdir,sprintf('allvoxels%i',iteration)),...
+     'voxels_meanperf','compiled')
+
 
