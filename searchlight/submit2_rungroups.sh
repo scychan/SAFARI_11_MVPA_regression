@@ -20,7 +20,7 @@ for subjnum in $subjnums; do
 	elif ismachine della; then
 	    for igroup in `seq 1 $ngroups`; do
 		echo $igroup
-		submit_short set_params_and_run_mvpa.m $subjnum $analysis searchlight_radius $searchlight_radius penalty $penalty dozscore $zscore groupnum $igroup
+		submit_short set_params_and_run_mvpa.m $subjnum $analysis searchlight_radius $searchlight_radius penalty $penalty dozscore $zscore mask $mask groupnum $igroup
 	    done
 	fi
     else
@@ -30,7 +30,7 @@ for subjnum in $subjnums; do
 	    elif ismachine della; then
 		for igroup in `seq 1 $ngroups`; do
 		    echo $igroup
-		    submit_short set_params_and_run_mvpa.m $subjnum $analysis searchlight_radius $searchlight_radius penalty $penalty dozscore $zscore groupnum $igroup iteration $iteration
+		    submit_short set_params_and_run_mvpa.m $subjnum $analysis searchlight_radius $searchlight_radius penalty $penalty dozscore $zscore mask $mask groupnum $igroup iteration $iteration
 		done
 	    fi
 	done
