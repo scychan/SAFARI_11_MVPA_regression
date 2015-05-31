@@ -7,12 +7,13 @@ function compile_results(subjnum,analysis,varargin)
 pairs = {'searchlight_radius'    3   % radius of sphere (smallest = radius 1 = one voxel)
          'penalty'               1   % regularization penalty
          'dozscore'              1   % whether to zscore
-	 'mask'                'wholebrain'};
+	 'mask'                'wholebrain'
+	 'iteration'             []};
 parseargs(varargin,pairs);
 
 % if rondo/della, convert string inputs to numbers
 if isrondo || isdella
-    str2num_set('subjnum','searchlight_radius','penalty','dozscore')
+    str2num_set('subjnum','searchlight_radius','penalty','dozscore','iteration')
 end
 
 % print parsed inputs
@@ -44,7 +45,11 @@ for ivox = 1:nvox
     end
     
     % load results
-    voxdir = dir_filenames(sprintf('%s/searchlights/vox%i_*',resultsdir,ivox),1,1);
+    if isempty(iteration)
+        voxdir = dir_filenames(sprintf('%s/searchlights/vox%i_*',resultsdir,ivox),1,1);
+    else 
+        voxdir = dir_filenames(sprintf('%s/searchlights_iter%i/vox%i_*',resultsdir,iteration,ivox),1,1);
+    end
     load(fullfile(voxdir,'results'))
         
     % save to voxels_meanperf
