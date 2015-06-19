@@ -7,6 +7,7 @@ radius=$3
 penalty=$4
 zscore=$5
 mask=$6
+iteration=$7
 
 # basics
 datadir=../../data/SFR$subj
@@ -16,6 +17,6 @@ standard=$FSLDIR/data/standard/MNI152_T1_2mm_brain
 # transform 'compiled' to standard space
 echo 'Transforming to standard space...'
 transform=$datadir/transforms/run1/example_func2standard.mat
-orig=$resultsdir/compiled
-outfile=$resultsdir/transformed
+orig=$resultsdir/compiled$iteration
+outfile=$resultsdir/transformed$iteration
 flirt -interp nearestneighbour -in $orig -ref $standard -applyxfm -init $transform -out $outfile.nii.gz
