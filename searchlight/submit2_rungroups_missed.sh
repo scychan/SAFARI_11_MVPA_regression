@@ -5,13 +5,16 @@
 
 # main options
 subjnum=$1
-radius=$2
-penalty=$3
+analysis=$2
+radius=$3
+penalty=$4
+zscore=$5
+mask=$6
 
 # file to read from
-voxlisting=../../results/searchlights/radius$radius/penalty$penalty/SFR$subjnum/check_results.txt
+voxlisting=../../results/searchlights/$analysis/radius$radius/penalty$penalty/zscore$zscore/mask$mask/SFR$subjnum/check_results.txt
  
 # run_mvpa for all the voxels
 cat $voxlisting | while read line; do
-    submit_short set_params_and_run_mvpa.m $subjnum searchlight_radius $radius penalty $penalty voxels_to_run "'$line'"
+    submit_short set_params_and_run_mvpa.m $subjnum $analysis searchlight_radius $radius penalty $penalty dozscore $zscore mask $mask voxels_to_run "'$line'"
 done

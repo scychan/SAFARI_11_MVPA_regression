@@ -7,11 +7,16 @@ if ismachine rondo; then
     alias copy='rsync -av'
 else
     echo 'is not rondo'
-    alias copy='rsfa -f'
+    read -p 'copy through Nobel? (y/n)' throughNobel
+    if [ $throughNobel = 'y' ]; then
+	alias copy='rsfan'
+    else
+	alias copy='rsfa -f'
+    fi
 fi
 
 # subjnums and directory shortcuts
-subjnums='115 116 117 118 119 120 121 122 123 124 125 126 127 129 130 131 132 133 134' # 101 102 103 104 105 106 107 108 109 110 112 113 114
+subjnums='101 102 103 104 105 106 107 108 109 110 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 129 130 131 132 133 134'
 SFR='/jukebox/norman/stephanie/safari'
 
 # Prompt for instructions
@@ -20,7 +25,7 @@ if [ ! $copyall = 'y' ]; then
     read -p 'Copy run lengths? (y/n) ' copyrunlens
     read -p 'Copy EPIs? (y/n) ' copyEPIs
     read -p 'Copy non-smoothed EPIs? (y/n) ' copynosmoothEPIs
-    read -p 'Copy whole-brain masks? (y/n) ' copybrainmasks
+    read -p 'Copy brainmasks? (y/n) ' copybrainmasks
     read -p 'Copy regressors/selectors? (y/n) ' copyregs
     read -p 'Copy transforms? (y/n) ' copytransforms
 fi
@@ -62,9 +67,11 @@ for subj in $subjnums; do
 	gunzip ${nosmoothfile}.nii.gz
     fi
 
-     # load wholebrain masks
+     # load brain masks
     if [ $copyall = 'y' ] || [ $copybrainmasks = 'y' ]; then
-	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/mask_wholebrain.nii.gz
+	mkdir_ifnotexist $subjdir/masks
+	copy $SFR/6_fMRI_data/SFR$subj/feat_preproc/run1_mc_fmu.feat/mask.nii.gz $subjdir/masks/wholebrain.nii.gz
+	copy $SFR/8_masks/SFR$subj/* $subjdir/masks/
     fi
 
     # load regressors/selectors

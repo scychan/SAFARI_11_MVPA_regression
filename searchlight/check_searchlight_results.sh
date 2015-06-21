@@ -1,10 +1,13 @@
 #!/bin/bash
 subjnum=$1
-radius=$2
-penalty=$3
+analysis=$2
+radius=$3
+penalty=$4
+zscore=$5
+mask=$6
 
 # resultsdir
-resultsdir=../../results/searchlights/radius$radius/penalty$penalty/SFR$subjnum
+resultsdir=../../results/searchlights/$analysis/radius$radius/penalty$penalty/zscore$zscore/mask$mask/SFR$subjnum
 echo $resultsdir
 
 # get nvox

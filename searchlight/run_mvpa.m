@@ -142,8 +142,12 @@ end
 
 results_name = sprintf('vox%i_%s',args.ivox,datestr(now,'mmddyy_HHSS'));
 
-basedir = get_basedir(args.searchlight_radius,args.penalty,args.zscore,args.subjID);
-results_dir = fullfile(basedir,'/searchlights',results_name);
+basedir = get_basedir(args.analysis,args.searchlight_radius,args.penalty,args.zscore,args.maskname,args.subjID);
+if isempty(args.iteration)
+    results_dir = fullfile(basedir,'searchlights',results_name);
+else
+    results_dir = fullfile(basedir,sprintf('searchlights_iter%i',args.iteration),results_name);
+end
 mkdir_ifnotexist(results_dir);
 
 save(fullfile(results_dir,'args'),'args')
