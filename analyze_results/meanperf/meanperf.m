@@ -17,7 +17,7 @@ parseargs(varargin,pairs);
 
 addpath('../searchlight')
 
-basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,brainmask,subjnum);
+basedir = get_basedir(analysis,searchlight_radius,penalty,dozscore,mask,subjnum);
 
 %% load results
 
@@ -30,6 +30,6 @@ end
 
 voxelmeans = mean(results,1);
 
-figure; hold on
+hold on
 hist(voxelmeans,20)
 drawacross('v',chance,'r--')
